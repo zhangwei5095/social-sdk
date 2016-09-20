@@ -53,7 +53,9 @@ public class Message extends JsonBean {
   private Double precision;// 地理位置精度
   private List<Article> articles;// 多条图文消息信息，默认第一个item为大图
 
-  /** 模板消息特有的属性 */
+  /**
+   * 模板消息特有的属性
+   */
   private String templateId;// 模板消息的id
   private String topColor;// 模板消息头部的颜色 eg:#FF0000
   private List<Variable> variables;// 模板消息的变量
@@ -304,7 +306,7 @@ public class Message extends JsonBean {
 
   /**
    * 扫描二维码，用户已关注时的事件推送特有
-   * 
+   * <p/>
    * 二维码的ticket，可用来换取二维码图片
    */
   public String getTicket() {
@@ -432,7 +434,7 @@ public class Message extends JsonBean {
       }
       obj.put("Articles", array);
     }
-    return XML.toString(obj, "xml");
+    return XML.toString(obj, "xml").replaceAll("</Articles><Articles>", "");
   }
 
   /**
@@ -572,6 +574,10 @@ public class Message extends JsonBean {
       }
       if (eventType == EventType.CLICK) {
         obj.eventKey = Result.toString(jsonObject.opt("EventKey"));
+      }
+      if (eventType == EventType.VIEW) {
+        obj.eventKey = Result.toString(jsonObject.opt("EventKey"));
+        obj.url = obj.eventKey;
       }
     }
     return obj;

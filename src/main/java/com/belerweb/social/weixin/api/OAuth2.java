@@ -1,5 +1,7 @@
 package com.belerweb.social.weixin.api;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,6 +95,40 @@ public final class OAuth2 extends API {
   }
 
   /**
+   * 获取网站应用登录的Authorization Code，调用顺序如下：
+   * 
+   * <pre>
+   *    Weixin weixin = new Weixin(weixinAppId, weixinAppSecret);
+   *    weixin.setRedirectUri(weixinAppRedirect);
+   *    weixin.getOAuth2().authorizeLogin(state);        
+   * </pre>
+   * 
+   * <p>
+   * 文档地址：https://open.weixin.qq.com/cgi-bin/showdocument?action=dir_list&t=resource/res_list&verify
+   * =1&id=open1419316505&token=&lang=zh_CN
+   * 
+   * @param state 重定向后会带上state参数，开发者可以填写任意参数值
+   */
+  public String authorizeLogin(String state) {
+    List<NameValuePair> params = new ArrayList<NameValuePair>();
+    weixin.addParameter(params, "appid", weixin.getAppId());
+    String redirect_uri = "";
+    try {
+      redirect_uri = URLEncoder.encode(weixin.getRedirectUri(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
+    weixin.addParameter(params, "redirect_uri", redirect_uri);
+    weixin.addParameter(params, "response_type", "code");
+    weixin.addParameter(params, "scope", Scope.SNSAPI_LOGIN);
+    weixin.addNotNullParameter(params, "state", state);
+    String result =
+        "https://open.weixin.qq.com/connect/qrconnect?" + StringUtils.join(params, "&")
+            + "#wechat_redirect";
+    return result;
+  }
+
+  /**
    * 通过code换取网页授权access_token。从{@link Weixin}中获取appId和secret。
    * 
    * @param code 填写第一步获取的code参数
@@ -127,7 +163,10 @@ public final class OAuth2 extends API {
     weixin.addParameter(params, "secret", secret);
     weixin.addParameter(params, "code", code);
     weixin.addParameter(params, "grant_type", grantType);
-    String result = weixin.get("https://api.weixin.qq.com/sns/oauth2/access_token", params);
+    // String result = weixin.post("https://api.weixin.qq.com/sns/oauth2/access_token", params);
+    String result =
+        weixin.get("https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + appId + "&secret="
+            + secret + "&code=" + code + "&grant_type=authorization_code");
     return Result.parse(result, AccessToken.class);
   }
 
